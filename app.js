@@ -1,33 +1,28 @@
+import { getWeekDay } from "./utils/customDate.js"
 import getWeatherData from "./utils/httpReq.js"
 import { removeModal, showModal } from "./utils/modal.js"
 
-const DAYS=[
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday"
-]
+
 const searchInput=document.querySelector("input")
 const searchButton=document.querySelector("button")
 const weatherContainer=document.getElementById("weather")
 const forecastContainer=document.getElementById("forecast")
 const locationIcon=document.getElementById("location")
 const modalButton=document.getElementById("modal-button")
-
+const loader=document.getElementById("loader")
 
 
 
 const renderCurrentWeather=data=>{
+  loader.style.display="inline-block"
      if(!data) return
+    
     const weatherJsx=`
     <h1>${data.name},${data.sys.country}</h1>
     <div id="main">
     <img alt="weather icon" src="http://openweathermap.org/img/w/${data.weather[0].icon}.png" />
     <span>${data.weather[0].main}</span>
-    <p>${Math.round(data.main.temp/10)} ℃</p>
+    <p>${Math.round(data.main.temp)} ℃</p>
    
     </div>
      <div id="info">
@@ -37,13 +32,15 @@ const renderCurrentWeather=data=>{
     </div>
 
     `
+
     weatherContainer.innerHTML=weatherJsx
+      loader.style.display="none"
 }
-const getWeekDay=date=>{
-    return DAYS[new Date(date*1000).getDay()]
-}
+
 const renderForecastWeather=(data)=>{
+
     if(!data) return
+
     forecastContainer.innerHTML=""
        data=data.list.filter(obj=>obj.dt_txt.endsWith("12:00:00"))
        data.forEach(i=>{
@@ -51,7 +48,7 @@ const renderForecastWeather=(data)=>{
          <div>
            <img alt="weather icon" src="http://openweathermap.org/img/w/${i.weather[0].icon}.png" />
            <h3>${getWeekDay(i.dt)}</h3>
-           <p>${Math.round(i.main.temp/10)} ℃</p>
+           <p>${Math.round(i.main.temp)} ℃</p>
            <span>${i.weather[0].main}</span>
          </div>
          `
@@ -93,7 +90,14 @@ const locationHandler=()=>{
       showModal("Your browser does not support geolocation")
    }
 }
+const initHandler=async()=>{
+   const currentData=await getWeatherData("current","berlin")
+   renderCurrentWeather(currentData)
 
+   const forecastData=await getWeatherData("forecast","berlin")
+   renderForecastWeather(forecastData)
+}
 searchButton.addEventListener("click",searchHandler)
 locationIcon.addEventListener("click",locationHandler)
 modalButton.addEventListener("click",removeModal)
+document.addEventListener("DOMContentLoaded",initHandler)
